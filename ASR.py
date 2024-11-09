@@ -15,7 +15,7 @@ def real_time_transcribe_whisper(model_name="small"):
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4000)
     stream.start_stream()
 
-    print("Listening...")
+    print("Listening... (press Ctrl+C to stop)")
 
     frames = []
     try:
@@ -23,18 +23,14 @@ def real_time_transcribe_whisper(model_name="small"):
             data = stream.read(4000, exception_on_overflow=False)
             frames.append(np.frombuffer(data, np.int16))
 
-            # Condition to end recording (e.g., manually stop or add time limit)
-            if len(frames) > 50:  # Approx. 5 seconds of audio
-                break
-
-    finally:
+    except KeyboardInterrupt:
         stream.stop_stream()
         stream.close()
         p.terminate()
 
     # Process the recorded audio using Whisper
     audio_data = np.concatenate(frames, axis=0).astype(np.float32) / 32768.0
-    result = model.transcribe(audio_data)
+    result = model.transcribe(audio_data, fp16=False)
     transcribed_text = result['text']
     print(f"Transcribed Text: {transcribed_text}")
 
