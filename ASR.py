@@ -2,15 +2,12 @@ import whisper
 import pyaudio
 from transformers import MarianMTModel, MarianTokenizer
 import numpy as np
-import soundfile as sf
 from google.cloud import texttospeech
 
-# --- Real-Time Speech-to-Text (STT) with Whisper ---
+# Realtime STT with Whisper 
 def real_time_transcribe_whisper(model_name="small"):
-    """Capture audio from microphone and transcribe in real-time using Whisper."""
     model = whisper.load_model(model_name)
 
-    # Set up PyAudio to capture audio in real-time
     p = pyaudio.PyAudio()
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4000)
     stream.start_stream()
@@ -36,7 +33,7 @@ def real_time_transcribe_whisper(model_name="small"):
 
     return transcribed_text
 
-# --- Translation with MarianMT ---
+# MarianMT translation 
 class Translator:
     def __init__(self):
         self.en_to_ar_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-ar")
@@ -54,7 +51,7 @@ class Translator:
             outputs = self.ar_to_en_model.generate(**inputs)
             return self.ar_to_en_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# --- Text-to-Speech (TTS) with Google Cloud WaveNet ---
+# TTS with Google Cloud WaveNet
 def synthesize_speech_wavenet(text, output_file="output.mp3", language_code="en-US", voice_name="en-US-Wavenet-D"):
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -66,7 +63,7 @@ def synthesize_speech_wavenet(text, output_file="output.mp3", language_code="en-
         print(f"Audio content written to '{output_file}'")
 
 
-# --- Combined Process for Real-Time Translation and Speech ---
+# functions combination 
 def real_time_translate_and_respond(target_language="ar", output_audio_path="translated_output.wav"):
     # Real-time transcription with Whisper
     transcribed_text = real_time_transcribe_whisper()
@@ -85,5 +82,4 @@ def real_time_translate_and_respond(target_language="ar", output_audio_path="tra
 
 
 # Example usage
-# Set 'target_language' to "ar" for English-to-Arabic, and "en" for Arabic-to-English
 real_time_translate_and_respond(target_language="ar")
