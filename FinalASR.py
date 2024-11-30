@@ -2,13 +2,16 @@ import whisper
 import pyaudio
 from transformers import MarianMTModel, MarianTokenizer, M2M100ForConditionalGeneration, M2M100Tokenizer
 import numpy as np
+import soundfile as sf
 from google.cloud import texttospeech
 import torch
 
-# Realtime STT with Whisper 
+# --- Real-Time Speech-to-Text (STT) with Whisper ---
 def real_time_transcribe_whisper(model_name="small"):
+    """Capture audio from microphone and transcribe in real-time using Whisper."""
     model = whisper.load_model(model_name)
 
+    # Set up PyAudio to capture audio in real-time
     p = pyaudio.PyAudio()
     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4000)
     stream.start_stream()
@@ -35,34 +38,24 @@ def real_time_transcribe_whisper(model_name="small"):
 
     return transcribed_text
 
-# MarianMT translation 
-class Translator:
-    def __init__(self):
-        # self.mul_to_mul_model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M")
-        # self.mul_to_mul_tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
-        # self.en_to_mul_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-mul")
-        # self.en_to_mul_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-mul")
-        # self.mul_to_en_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-mul-en")
-        # self.mul_to_en_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-mul-en")
-        # # will be deleted ⬇️ 
-        self.en_to_ar_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-ar")
-        self.en_to_ar_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-ar")
-        self.ar_to_en_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-ar-en")
-        self.ar_to_en_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-ar-en")
-        
-        #Wiil be changed ⬇️
-        
-    def translate(self, text, source_language="en", target_language="ar"):
-        if target_language == "ar":
-            inputs = self.en_to_ar_tokenizer(text, return_tensors="pt")
-            outputs = self.en_to_ar_model.generate(**inputs)
-            return self.en_to_ar_tokenizer.decode(outputs[0], skip_special_tokens=True)
-        else:
-            inputs = self.ar_to_en_tokenizer(text, return_tensors="pt")
-            outputs = self.ar_to_en_model.generate(**inputs)
-            return self.ar_to_en_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# TTS with Google Cloud WaveNet
+
+
+def translate(text, model, tokenizer):
+    
+    # Tokenize the input text (English)
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+    
+    # Generate the translation (Arabic)
+    with torch.no_grad():  # No need to calculate gradients during inference
+        translated = model.generate(**inputs)
+    
+    # Decode the translated tokens to get the Arabic text
+    translated_text = tokenizer.decode(translated[0], skip_special_tokens=True)
+    return translated_text
+
+
+# --- Text-to-Speech (TTS) with Google Cloud WaveNet ---
 def synthesize_speech_wavenet(text, output_file="output.mp3", language_code="en-US", voice_name="en-US-Wavenet-D"):
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -74,15 +67,22 @@ def synthesize_speech_wavenet(text, output_file="output.mp3", language_code="en-
         print(f"Audio content written to '{output_file}'")
 
 
-# functions combination 
-def real_time_translate_and_respond(target_language="ar", output_audio_path="translated_output.wav"):
+# --- Combined Process for Real-Time Translation and Speech ---
+def real_time_translate_and_respond(target_language="en", output_audio_path="translated_output.wav"):
     # Real-time transcription with Whisper
     transcribed_text = real_time_transcribe_whisper()
     print(f"Transcribed Text: {transcribed_text}")
 
     # Translation
-    translator = Translator()
-    translated_text = translator.translate(transcribed_text, target_language=target_language)
+    if target_language == "en":
+        model_dir = "./fine_tuned_ar_en_model"
+    else:
+        model_dir = "./fine_tuned_en_ar_model"
+        
+    tokenizer = MarianTokenizer.from_pretrained(model_dir)
+    model = MarianMTModel.from_pretrained(model_dir)
+    
+    translated_text = translate(transcribed_text, model, tokenizer)
     print(f"Translated Text: {translated_text}")
 
     
@@ -93,4 +93,5 @@ def real_time_translate_and_respond(target_language="ar", output_audio_path="tra
 
 
 # Example usage
-real_time_translate_and_respond(target_language="ar")
+# Set 'target_language' to "ar" for English-to-Arabic, and "en" for Arabic-to-English
+real_time_translate_and_respond(target_language="en")
