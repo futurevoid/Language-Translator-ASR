@@ -20,7 +20,7 @@ def translate(text, model, tokenizer):
     return translated_text
 
 # Step 3: Translate new English text
-source_text = "كيف حالك با محمد هل انت بخير"  # Example text
+source_text = "امرأة ترتدي شبكة على رأسها تقطع كعكة"   # Example text
 translated_text = translate(source_text, model, tokenizer)
 
 # Print the translated text

@@ -45,10 +45,10 @@ class Translator:
         # self.mul_to_en_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-mul-en")
         # self.mul_to_en_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-mul-en")
         # # will be deleted ⬇️ 
-        self.en_to_ar_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-ar")
-        self.en_to_ar_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-ar")
-        self.ar_to_en_model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-ar-en")
-        self.ar_to_en_tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-ar-en")
+        self.en_to_ar_model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M")
+        self.en_to_ar_tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
+        self.ar_to_en_model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M")
+        self.ar_to_en_tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
         
         #Wiil be changed ⬇️
         
@@ -75,7 +75,7 @@ def synthesize_speech_wavenet(text, output_file="output.mp3", language_code="en-
 
 
 # functions combination 
-def real_time_translate_and_respond(target_language="ar", output_audio_path="translated_output.wav"):
+def real_time_translate_and_respond(target_language, output_audio_path="translated_output.wav"):
     # Real-time transcription with Whisper
     transcribed_text = real_time_transcribe_whisper()
     print(f"Transcribed Text: {transcribed_text}")
@@ -93,4 +93,4 @@ def real_time_translate_and_respond(target_language="ar", output_audio_path="tra
 
 
 # Example usage
-real_time_translate_and_respond(target_language="ar")
+real_time_translate_and_respond(target_language="en")

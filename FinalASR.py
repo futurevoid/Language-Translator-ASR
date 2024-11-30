@@ -7,7 +7,7 @@ from google.cloud import texttospeech
 import torch
 
 # --- Real-Time Speech-to-Text (STT) with Whisper ---
-def real_time_transcribe_whisper(model_name="small"):
+def real_time_transcribe_whisper(model_name="turbo"):
     """Capture audio from microphone and transcribe in real-time using Whisper."""
     model = whisper.load_model(model_name)
 
@@ -34,11 +34,7 @@ def real_time_transcribe_whisper(model_name="small"):
     audio_data = np.concatenate(frames, axis=0).astype(np.float32) / 32768.0
     result = model.transcribe(audio_data, fp16=False)
     transcribed_text = result['text']
-    print(f"Transcribed Text: {transcribed_text}")
-
     return transcribed_text
-
-
 
 
 def translate(text, model, tokenizer):
@@ -94,4 +90,4 @@ def real_time_translate_and_respond(target_language="en", output_audio_path="tra
 
 # Example usage
 # Set 'target_language' to "ar" for English-to-Arabic, and "en" for Arabic-to-English
-real_time_translate_and_respond(target_language="en")
+real_time_translate_and_respond(target_language="ar")
