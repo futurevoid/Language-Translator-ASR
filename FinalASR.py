@@ -1,8 +1,7 @@
 import whisper
 import pyaudio
-from transformers import MarianMTModel, MarianTokenizer, M2M100ForConditionalGeneration, M2M100Tokenizer
+from transformers import MarianMTModel, MarianTokenizer
 import numpy as np
-import soundfile as sf
 from google.cloud import texttospeech
 import torch
 

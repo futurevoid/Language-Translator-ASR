@@ -1,10 +1,14 @@
 from transformers import MarianMTModel, MarianTokenizer
 from datasets import load_dataset
 from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
+import evaluate
 
 # Step 1: Load the MS-Glossary-EN-AR dataset
-dataset = load_dataset("ymoslem/MS-Glossary-EN-AR", split="train[:100%]")  # Use 1% for faster training
-dataset = dataset.shuffle(seed=42)
+dataset = load_dataset("ymoslem/MS-Glossary-EN-AR")
+
+# Split the dataset into train (80%) and validation (20%)
+train_dataset = dataset["train"].select(range(int(0.8 * len(dataset["train"]))))
+val_dataset = dataset["train"].select(range(int(0.8 * len(dataset["train"]))), len(dataset["train"]))
 
 # Step 2: Load MarianMTModel and MarianTokenizer for English-to-Arabic translation
 model_name = "Helsinki-NLP/opus-mt-en-ar"  # Use the EN-AR model
@@ -23,20 +27,22 @@ def preprocess_function(examples):
     inputs['labels'] = targets['input_ids']
     return inputs
 
-# Step 4: Prepare the training dataset
-tokenized_dataset = dataset.map(preprocess_function, batched=True)
+# Step 4: Prepare the tokenized dataset
+train_tokenized_dataset = train_dataset.map(preprocess_function, batched=True)
+val_tokenized_dataset = val_dataset.map(preprocess_function, batched=True)
 
 # Set dataset format for PyTorch
-tokenized_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+train_tokenized_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+val_tokenized_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
 # Step 5: Define the training arguments
 training_args = Seq2SeqTrainingArguments(
     output_dir="./results",  # Directory to save the model
-    evaluation_strategy="no",  # Disable evaluation during training
+    evaluation_strategy="epoch",  # Evaluate after each epoch
     save_strategy="steps",  # Save model at regular intervals
     per_device_train_batch_size=8,  # Smaller batch size to fit in memory
     per_device_eval_batch_size=8,  # Evaluation batch size
-    num_train_epochs=3,  # Number of training epochs
+    num_train_epochs=1,  # Number of training epochs
     save_total_limit=2,  # Keep only the last 2 saved models
     fp16=True,  # Mixed precision training for faster performance
     predict_with_generate=True,  # Use generation for predictions
@@ -49,7 +55,8 @@ training_args = Seq2SeqTrainingArguments(
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_dataset,
+    train_dataset=train_tokenized_dataset,
+    eval_dataset=val_tokenized_dataset,
     tokenizer=tokenizer,
 )
 
@@ -62,8 +69,18 @@ tokenizer.save_pretrained("./fine_tuned_en_ar_model")
 
 print("Training complete and model saved!")
 
-print("Testing the model...")
-text = "i love you very much"  # Test sentence in Arabic
-inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-outputs = model.generate(**inputs)
-print("Translation:", tokenizer.decode(outputs[0], skip_special_tokens=True))
+# Evaluating the model
+print("Evaluating the model...")
+metric = evaluate.load("sacrebleu")  # Load BLEU metric using evaluate
+
+# Prepare a small evaluation dataset (use validation set)
+eval_dataset = val_tokenized_dataset.select(range(100))  # Use the first 100 samples for evaluation
+predictions, label_ids, metrics = trainer.predict(eval_dataset)
+
+# Decode predictions and labels
+decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+decoded_labels = tokenizer.batch_decode(label_ids, skip_special_tokens=True)
+
+# Compute BLEU score
+bleu_score = metric.compute(predictions=decoded_preds, references=[[label] for label in decoded_labels])
+print(f"BLEU score: {bleu_score['score']:.2f}")
