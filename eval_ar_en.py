@@ -11,7 +11,7 @@ import os
 
 # Load the saved pre-trained model and tokenizer
 print("Loading the saved model and tokenizer...")
-saved_model_path = "./ar_en_model1"  # Path to your saved model
+saved_model_path = "./aem"  # Path to your saved model
 model = MarianMTModel.from_pretrained(saved_model_path)
 tokenizer = MarianTokenizer.from_pretrained(saved_model_path)
 
@@ -69,6 +69,7 @@ for batch in trainer.get_eval_dataloader():
     with torch.no_grad():
         # Perform generation (not a classification problem)
         generated_ids = model.generate(input_ids)
+        print(generated_ids)
         preds = generated_ids
 
     # Store the predictions and labels for confusion matrix

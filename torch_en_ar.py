@@ -103,9 +103,9 @@ trainer = Seq2SeqTrainer(
 print("Starting the training process...")
 # Start training
 trainer.train()
-
+model_dir = "./en_ar_model"
 # Save the model and tokenizer
-trainer.save_model("./translation_model")  # Saves the model weights
-tokenizer.save_pretrained("./translation_model")  # Saves the tokenizer
+trainer.save_model(model_dir)  # Saves the model weights
+tokenizer.save_pretrained(model_dir)  # Saves the tokenizer
 
 print("Model, tokenizer, and training arguments saved using Trainer.")
