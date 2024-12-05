@@ -9,14 +9,14 @@ import evaluate
 
 # Load the saved pre-trained model and tokenizer
 print("Loading the saved model and tokenizer...")
-saved_model_path = "./translation_model"  # Path to your saved model
+saved_model_path = "./aem"  # Path to your saved model
 model = MarianMTModel.from_pretrained(saved_model_path)
 tokenizer = MarianTokenizer.from_pretrained(saved_model_path)
 
-# Set the model to evaluation mode (important for inference)
+# Set the model to evaluation mode
 model.eval()
 
-# Load the dataset for evaluation (same dataset used in training)
+# Load the dataset for evaluation 
 dataset = load_dataset("MagedSaeed/opus-100_ar_en_experimental", split="test")
 test_dataset = dataset
 
@@ -40,7 +40,7 @@ training_args = Seq2SeqTrainingArguments(
     predict_with_generate=True,  # Use generation for predictions
 )
 
-# Set up the Trainer (only for evaluation, no training)
+# Set up the Trainer 
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
@@ -83,7 +83,7 @@ def compute_bleu():
 
         # Append predictions and references
         all_preds.extend(preds)
-        all_labels.extend([[ref] for ref in refs])  # SacreBLEU expects a list of references per sample
+        all_labels.extend([[ref] for ref in refs])  
 
     # Calculate BLEU score
     bleu_score = bleu.compute(predictions=all_preds, references=all_labels)
@@ -92,8 +92,8 @@ def compute_bleu():
 # Track BLEU score over epochs
 bleu_scores = []
 
-# Simulate training with multiple epochs (if you're running actual epochs)
-epochs = 3  # Set to the number of epochs you're running
+# Simulate training with multiple epochs 
+epochs = 3  
 
 for epoch in range(epochs):
     print(f"Epoch {epoch + 1}/{epochs} - Calculating BLEU score...")
@@ -109,7 +109,7 @@ plt.title("BLEU Score vs Epochs")
 plt.legend()
 plt.show()
 
-# Track eval loss over epochs (assuming you call evaluate after each epoch)
+# Track eval loss over epochs 
 eval_losses = []
 
 for epoch in range(epochs):
@@ -118,7 +118,7 @@ for epoch in range(epochs):
     eval_losses.append(eval_results['eval_loss'])
     print(f"Evaluation Loss for epoch {epoch + 1}: {eval_results['eval_loss']:.4f}")
 
-# Plot learning curve (Loss vs. Epochs)
+# Plot learning curve 
 plt.plot(range(1, epochs + 1), eval_losses, label="Eval Loss", marker='o')
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
