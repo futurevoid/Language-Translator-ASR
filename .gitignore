@@ -10,3 +10,25 @@
 /aefmd40
 /aea.py
 /eaa.py
+/Torch_ar_en.py
+/train_target.txt
+/train_input.txt
+/spm_target.vocab
+/spm_target.model
+/spm_model.vocab
+/spm_input.vocab
+/spm_input.model
+/spm_model.model
+/Sentence pairs in English-Arabic - 2024-12-05.tsv
+/lstm_keras_test.py
+/lstm_keras_test copy.py
+/kt.py
+/input_token_index.json
+/corpus.txt
+/en-ar.txt
+/FinalASRs.py
+/torch_ar_en.py
+/torch_en_ar.py
+/target_token_index.json
+/best_model.keras
+/bestfit_model.keras

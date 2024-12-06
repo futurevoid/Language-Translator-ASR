@@ -70,9 +70,9 @@ def real_time_translate_and_respond(target_language="en", output_audio_path="tra
 
     # Translation
     if target_language == "en":
-        model_dir = "./fine_tuned_ar_en_model"
+        model_dir = "./aem"
     else:
-        model_dir = "./fine_tuned_en_ar_model"
+        model_dir = "./eam"
         
     tokenizer = MarianTokenizer.from_pretrained(model_dir)
     model = MarianMTModel.from_pretrained(model_dir)
